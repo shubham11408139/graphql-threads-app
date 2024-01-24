@@ -16,6 +16,7 @@ const express4_1 = require("@apollo/server/express4");
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const graphql_1 = __importDefault(require("./graphql"));
+const user_1 = __importDefault(require("./services/user"));
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = (0, express_1.default)();
@@ -23,7 +24,19 @@ function startServer() {
         app.use(express_1.default.json());
         const gqlServer = yield (0, graphql_1.default)();
         // Specify the path where we'd like to mount our server
-        app.use('/graphql', (0, cors_1.default)(), (0, express4_1.expressMiddleware)(gqlServer));
+        app.use('/graphql', (0, cors_1.default)(), (0, express4_1.expressMiddleware)(gqlServer, {
+            context: ({ req }) => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    //@ts-ignore
+                    const token = req.headers["token"];
+                    const user = user_1.default.decodeJWTToken(token);
+                    return { user };
+                }
+                catch (err) {
+                    return {};
+                }
+            })
+        }));
         app.listen(PORT, () => console.log(`Server is running on PORT: ${PORT}`));
     });
 }
